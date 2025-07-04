@@ -1,1 +1,1 @@
-# card_game_in_tkinter
+# project_in_tkinter

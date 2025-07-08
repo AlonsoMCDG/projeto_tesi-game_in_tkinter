@@ -1,0 +1,23 @@
+{
+    'bd': ('bd', '-borderwidth'),
+    'borderwidth': ('borderwidth', 'borderWidth', 'BorderWidth', 0, 0),
+    'class': ('class', 'class', 'Class', 'Toplevel', 'Tk'),
+    'menu': ('menu', 'menu', 'Menu', '', ''),
+    'relief': ('relief', 'relief', 'Relief', <index object: 'flat'>, 'flat'),
+    'screen': ('screen', 'screen', 'Screen', '', ''),
+    'use': ('use', 'use', 'Use', '', ''),
+    'background': ('background', 'background', 'Background', <border object: 'SystemButtonFace'>, 'SystemButtonFace'),
+    'bg': ('bg', '-background'),
+    'colormap': ('colormap', 'colormap', 'Colormap', '', ''),
+    'container': ('container', 'container', 'Container', 0, 0),
+    'cursor': ('cursor', 'cursor', 'Cursor', '', ''),
+    'height': ('height', 'height', 'Height', 0, 0),
+    'highlightbackground': ('highlightbackground', 'highlightBackground', 'HighlightBackground', <color object: 'SystemButtonFace'>, 'SystemButtonFace'),
+    'highlightcolor': ('highlightcolor', 'highlightColor', 'HighlightColor', <color object: 'SystemWindowFrame'>, 'SystemWindowFrame'),
+    'highlightthickness': ('highlightthickness', 'highlightThickness', 'HighlightThickness', 0, 0),
+    'padx': ('padx', 'padX', 'Pad', 0, 0),
+    'pady': ('pady', 'padY', 'Pad', 0, 0),
+    'takefocus': ('takefocus', 'takeFocus', 'TakeFocus', '0', '0'),
+    'visual': ('visual', 'visual', 'Visual', '', ''),
+    'width': ('width', 'width', 'Width', 0, 0)
+}

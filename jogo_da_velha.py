@@ -3,6 +3,7 @@ import tkinter as tk
 ### Constantes
 _JOGADOR_1 = 1 # 01b
 _JOGADOR_2 = 2 # 10b
+_EMPATE = 3
 _SIMBOLOS_JOGADORES = [' ', 'X', 'O']
 
 class TelaJogoDaVelha(tk.Frame):
@@ -16,8 +17,10 @@ class TelaJogoDaVelha(tk.Frame):
         self.vencedor = 0 # ninguém
 
         ### Frame com o nome do jogador 2 (oponente) (no topo da tela)
+        # a-fazer
 
         ### Frame com o nome do jogador 1 (atual) (no inferior da tela)
+        # a-fazer
 
         ### Frame com o grid 3x3 no centro
         self.frm_grid = tk.Frame(self)
@@ -51,17 +54,10 @@ class TelaJogoDaVelha(tk.Frame):
 
                 btn.grid(row=linha, column=coluna, sticky='nswe') # coloca o botao no frame
 
-        # Coloca os botoes no grame usando o gerenciador grid
-        # for i, btn in enumerate(self.botoes_grid):
-        #     linha = i // 3
-        #     coluna = i % 3
-        #     print(btn, btn.cget("text"))
-        #
-        #     btn.grid(row=linha, column=coluna, sticky='nswe')
-
-        print(self.posicoes_grid)
+        #print(self.posicoes_grid)
 
         ### Frame com opcoes de configuracao na lateral direita
+        # a-fazer
 
     def realizar_jogada(self, btn):
 
@@ -73,7 +69,7 @@ class TelaJogoDaVelha(tk.Frame):
             linha, coluna = btn.posicao
             self.posicoes_grid[linha][coluna] = self.jogador_com_a_vez
 
-            if self.checar_vitoria():
+            if self.checar_fim_de_jogo():
                 return
 
             # passa a vez para o proximo jogador
@@ -82,55 +78,66 @@ class TelaJogoDaVelha(tk.Frame):
             else:
                 self.jogador_com_a_vez = _JOGADOR_1
 
-
-
-
-    def checar_vitoria(self):
+    def checar_fim_de_jogo(self):
         #01, 10, 01
         #01, 01, 10
         #10, 01, 10
 
         g = self.posicoes_grid
-        alguem_venceu = False
 
-        print("-----")
-        print(self.posicoes_grid)
-
-        # linhas:
+        ### Linhas:
         for l in range(3):
             res = g[l][0] & g[l][1] & g[l][2]
 
-            print(f'Linha {l}: {res}')
-            print(g[l][0], g[l][1], g[l][2])
-
-            if res == _JOGADOR_1:
-                print("JOgador 1 venceu")
-                self.vencedor = _JOGADOR_1
+            # Checa se (e quem) venceu
+            if self._ha_vencedor(res):
                 return True
 
-            if res == _JOGADOR_2:
-                print("JOgador 2 venceu")
-                self.vencedor = _JOGADOR_2
-                return True
-
-        # colunas
+        ### Colunas:
         for c in range(3):
             res = g[0][c] & g[1][c] & g[2][c]
 
-            print(f'Linha {c}: {res}')
-            print(g[0][c], g[1][c], g[2][c])
-
-            if res == _JOGADOR_1:
-                print("JOgador 1 venceu")
-                self.vencedor = _JOGADOR_1
+            # Checa se (e quem) venceu
+            if self._ha_vencedor(res):
                 return True
 
-            if res == _JOGADOR_2:
-                print("JOgador 2 venceu")
-                self.vencedor = _JOGADOR_2
-                return True
+        ### Diagonais:
 
+        # principal
+        res = g[0][0] & g[1][1] & g[2][2]
+        # Checa se (e quem) venceu
+        if self._ha_vencedor(res):
+            return True
+
+        # secundaria
+        res = g[0][2] & g[1][1] & g[2][0]
+        # Checa se (e quem) venceu
+        if self._ha_vencedor(res):
+            return True
+
+        ### Empate
+        soma = 0
+        for i in range(3):
+            for j in range(3):
+                soma += g[i][j]
+        if soma == 13: # todas as posicoes estao preenchidas
+            print("Empate!!")
+            self.vencedor = _EMPATE
+            return True
+
+        # Ninguém venceu ainda
         return False
+
+    def _ha_vencedor(self, val):
+        if val == _JOGADOR_1:
+            print("Jogador 1 venceu")
+            self.vencedor = _JOGADOR_1
+            return True
+
+        if val == _JOGADOR_2:
+            print("Jogador 2 venceu")
+            self.vencedor = _JOGADOR_2
+            return True
 
 if __name__ == '__main__':
     gui = tk.Tk()

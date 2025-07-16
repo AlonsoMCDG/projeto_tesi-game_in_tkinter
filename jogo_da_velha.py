@@ -95,6 +95,7 @@ class TelaJogoDaVelha(tk.Frame):
 
         print("-----")
         print(self.posicoes_grid)
+
         # linhas:
         for l in range(3):
             res = g[l][0] & g[l][1] & g[l][2]
@@ -113,6 +114,22 @@ class TelaJogoDaVelha(tk.Frame):
                 return True
 
         # colunas
+        for c in range(3):
+            res = g[0][c] & g[1][c] & g[2][c]
+
+            print(f'Linha {c}: {res}')
+            print(g[0][c], g[1][c], g[2][c])
+
+            if res == _JOGADOR_1:
+                print("JOgador 1 venceu")
+                self.vencedor = _JOGADOR_1
+                return True
+
+            if res == _JOGADOR_2:
+                print("JOgador 2 venceu")
+                self.vencedor = _JOGADOR_2
+                return True
+
         return False
 
 if __name__ == '__main__':

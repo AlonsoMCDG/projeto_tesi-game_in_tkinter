@@ -1,24 +1,22 @@
 import tkinter as tk
+from tkinter import messagebox
 
-### Constantes
-_JOGADOR_1 = 1 # 01b
-_JOGADOR_2 = 2 # 10b
-_EMPATE = 3
-_SIMBOLOS_JOGADORES = [' ', 'X', 'O']
 
 class TelaJogoDaVelha(tk.Frame):
+    ### Constantes
+    _SEM_VENCEDOR = 0
+    JOGADOR_1 = 1  # 01b
+    JOGADOR_2 = 2  # 10b
+    EMPATE = 4
+    SIMBOLOS_JOGADORES = [' ', 'X', 'O']
 
     def __init__(self, master):
         super().__init__(master)
         self.janela = master
         self.config(width=700, height=500)
         self.pack(fill='both', expand=True)
-        self.jogador_com_a_vez = _JOGADOR_1
-        self.vencedor = 0 # ninguém
-
-        # Cria uma matriz 3x3 para guardar os simbolos em cada posicao do grid
-        self.posicoes_grid = [[0] * 3 for i in range(3)]
-
+        self.jogador_com_a_vez = TelaJogoDaVelha.JOGADOR_1
+        self.vencedor = TelaJogoDaVelha._SEM_VENCEDOR # ninguém
 
         ### Frame com o nome do jogador 2 (oponente) (no topo da tela)
         # a-fazer
@@ -27,20 +25,40 @@ class TelaJogoDaVelha(tk.Frame):
         # a-fazer
 
         ### Frame com o grid 3x3 no centro
-        self.inicializar_frame_do_grid()
+        self.frmGridJogo = FrameGridJogo(self, self)
+        self.frmGridJogo.pack()
 
         ### Frame com opcoes de configuracao na lateral direita
-        # a-fazer
+        FrameConfiguracoes(self).pack()
 
-    def inicializar_frame_do_grid(self):
-        self.frm_grid = tk.Frame(self)
-        self.frm_grid.pack()
+    def passar_a_vez(self):
+        # passa a vez para o proximo jogador
+        if self.jogador_com_a_vez == TelaJogoDaVelha.JOGADOR_1:
+            self.jogador_com_a_vez = TelaJogoDaVelha.JOGADOR_2
+        else:
+            self.jogador_com_a_vez = TelaJogoDaVelha.JOGADOR_1
+
+    def jogo_rolando(self):
+        return self.vencedor == TelaJogoDaVelha._SEM_VENCEDOR
+
+    def alterar_vencedor(self, vencedor):
+        self.vencedor = vencedor
+
+
+class FrameGridJogo(tk.Frame):
+    def __init__(self, master, controlador):
+        super().__init__(master)
+        print('master de grid:', self.master)
+        self.controlador = controlador
+
         # widgets de botões do grid
         self.botoes_grid = []
 
+        self.posicoes_grid = [[0]*3 for i in range(3)] # matriz com os símbolos em cada célula do grid
+
         for linha in range(3):
             for coluna in range(3):
-                btn = tk.Button(self.frm_grid,
+                btn = tk.Button(self,
                                 width=1,
                                 height=1,
                                 padx=40,
@@ -51,7 +69,7 @@ class TelaJogoDaVelha(tk.Frame):
                                 )
 
                 # definindo atributos personalizados pros botoes
-                btn.posicao = (linha, coluna)  # define um atributo com a linha e coluna da celula
+                btn.posicao = (linha, coluna)  # define um atributo com a linha e coluna de onde o botao se encontra
                 btn.valor_preenchido = ' '  # qual valor está preenchido no botão ('X', 'O' ou nenhum)
 
                 btn.config(command=lambda b=btn: self.realizar_jogada(b))
@@ -60,29 +78,26 @@ class TelaJogoDaVelha(tk.Frame):
                 btn.grid(row=linha, column=coluna, sticky='nswe')  # coloca o botao no frame
 
     def realizar_jogada(self, btn):
-
-        if self.vencedor == 0 and btn.valor_preenchido == ' ':
-            simbolo = _SIMBOLOS_JOGADORES[self.jogador_com_a_vez]
+        vez = self.controlador.jogador_com_a_vez
+        if self.controlador.jogo_rolando() and self.celula_esta_vazia(btn):
+            simbolo = TelaJogoDaVelha.SIMBOLOS_JOGADORES[vez]
             btn.config(text=simbolo)
             btn.valor_preenchido = simbolo
 
             linha, coluna = btn.posicao
-            self.posicoes_grid[linha][coluna] = self.jogador_com_a_vez
+            self.posicoes_grid[linha][coluna] = vez
 
-            if self.checar_fim_de_jogo():
+            if self.checar_se_jogo_acabou():
                 return
 
-            # passa a vez para o proximo jogador
-            if self.jogador_com_a_vez == _JOGADOR_1:
-                self.jogador_com_a_vez = _JOGADOR_2
-            else:
-                self.jogador_com_a_vez = _JOGADOR_1
+            self.controlador.passar_a_vez()
 
-    def checar_fim_de_jogo(self):
+    def checar_se_jogo_acabou(self):
         #01, 10, 01
         #01, 01, 10
         #10, 01, 10
 
+        bt = self.botoes_grid
         g = self.posicoes_grid
 
         ### Linhas:
@@ -91,6 +106,11 @@ class TelaJogoDaVelha(tk.Frame):
 
             # Checa se (e quem) venceu
             if self._ha_vencedor(res):
+                self.destacar_botoes(
+                    bt[self.linha_e_coluna_para_indice(l, 0)],
+                    bt[self.linha_e_coluna_para_indice(l, 1)],
+                    bt[self.linha_e_coluna_para_indice(l, 2)],
+                )
                 return True
 
         ### Colunas:
@@ -99,6 +119,11 @@ class TelaJogoDaVelha(tk.Frame):
 
             # Checa se (e quem) venceu
             if self._ha_vencedor(res):
+                self.destacar_botoes(
+                    bt[self.linha_e_coluna_para_indice(0, c)],
+                    bt[self.linha_e_coluna_para_indice(1, c)],
+                    bt[self.linha_e_coluna_para_indice(2, c)],
+                )
                 return True
 
         ### Diagonais:
@@ -107,12 +132,22 @@ class TelaJogoDaVelha(tk.Frame):
         res = g[0][0] & g[1][1] & g[2][2]
         # Checa se (e quem) venceu
         if self._ha_vencedor(res):
+            self.destacar_botoes(
+                bt[self.linha_e_coluna_para_indice(0, 0)],
+                bt[self.linha_e_coluna_para_indice(1, 1)],
+                bt[self.linha_e_coluna_para_indice(2, 2)],
+            )
             return True
 
         # secundaria
         res = g[0][2] & g[1][1] & g[2][0]
         # Checa se (e quem) venceu
         if self._ha_vencedor(res):
+            self.destacar_botoes(
+                bt[self.linha_e_coluna_para_indice(0, 2)],
+                bt[self.linha_e_coluna_para_indice(1, 1)],
+                bt[self.linha_e_coluna_para_indice(2, 0)],
+            )
             return True
 
         ### Empate
@@ -122,24 +157,44 @@ class TelaJogoDaVelha(tk.Frame):
                 soma += g[i][j]
         if soma == 13: # todas as posicoes estao preenchidas
             print("Empate!!")
-            self.vencedor = _EMPATE
+            self.controlador.alterar_vencedor(TelaJogoDaVelha.EMPATE)
+            self.destacar_botoes(*bt)
             return True
 
         # Ninguém venceu ainda
         return False
 
-    def _ha_vencedor(self, val):
-        if val == _JOGADOR_1:
+    @staticmethod
+    def linha_e_coluna_para_indice(linha, coluna, num_linhas=3, num_colunas=3):
+        return linha * num_colunas + coluna
+
+    @staticmethod
+    def destacar_botoes(*botoes):
+        for btn in botoes:
+            btn.config(bg='red')
+
+    def _ha_vencedor(self, validagem):
+        if validagem == TelaJogoDaVelha.JOGADOR_1:
             print("Jogador 1 venceu")
-            self.vencedor = _JOGADOR_1
+            self.controlador.alterar_vencedor(TelaJogoDaVelha.JOGADOR_1)
             return True
 
-        if val == _JOGADOR_2:
+        if validagem == TelaJogoDaVelha.JOGADOR_2:
             print("Jogador 2 venceu")
-            self.vencedor = _JOGADOR_2
+            self.controlador.alterar_vencedor(TelaJogoDaVelha.JOGADOR_2)
             return True
 
         return False
+
+    @staticmethod
+    def celula_esta_vazia(btn):
+        return btn.valor_preenchido == ' '
+
+class FrameConfiguracoes(tk.Frame):
+    def __init__(self, master):
+        super().__init__(master)
+        print('master de configuracoes:', self.master)
+
 
 if __name__ == '__main__':
     gui = tk.Tk()

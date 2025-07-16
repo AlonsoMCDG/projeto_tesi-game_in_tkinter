@@ -1,7 +1,7 @@
 import tkinter as tk
 
 
-class Tela:
+class Letreiro:
     def __init__(self, master):
         self.janela = master
         self.janela.geometry("750x500")
@@ -62,5 +62,5 @@ class Tela:
             self.janela.after(500, self.animar_canvas)
 
 gui = tk.Tk()
-Tela(gui)
+Letreiro(gui)
 gui.mainloop()

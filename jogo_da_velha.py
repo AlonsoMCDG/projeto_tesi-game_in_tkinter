@@ -16,6 +16,10 @@ class TelaJogoDaVelha(tk.Frame):
         self.jogador_com_a_vez = _JOGADOR_1
         self.vencedor = 0 # ninguém
 
+        # Cria uma matriz 3x3 para guardar os simbolos em cada posicao do grid
+        self.posicoes_grid = [[0] * 3 for i in range(3)]
+
+
         ### Frame com o nome do jogador 2 (oponente) (no topo da tela)
         # a-fazer
 
@@ -23,13 +27,14 @@ class TelaJogoDaVelha(tk.Frame):
         # a-fazer
 
         ### Frame com o grid 3x3 no centro
+        self.inicializar_frame_do_grid()
+
+        ### Frame com opcoes de configuracao na lateral direita
+        # a-fazer
+
+    def inicializar_frame_do_grid(self):
         self.frm_grid = tk.Frame(self)
         self.frm_grid.pack()
-
-        # Cria uma matriz 3x3 para guardar os simbolos em cada posicao do grid
-        self.posicoes_grid = [[0]*3 for i in range(3)]
-
-
         # widgets de botões do grid
         self.botoes_grid = []
 
@@ -42,22 +47,17 @@ class TelaJogoDaVelha(tk.Frame):
                                 pady=15,
                                 relief="solid",
                                 font=("Arial", 40),
-                                #text=f'({linha}, {coluna})',
+                                # text=f'({linha}, {coluna})',
                                 )
 
                 # definindo atributos personalizados pros botoes
-                btn.posicao = (linha, coluna) # define um atributo com a linha e coluna da celula
-                btn.valor_preenchido = ' ' # qual valor está preenchido no botão ('X', 'O' ou nenhum)
+                btn.posicao = (linha, coluna)  # define um atributo com a linha e coluna da celula
+                btn.valor_preenchido = ' '  # qual valor está preenchido no botão ('X', 'O' ou nenhum)
 
-                btn.config(command = lambda b=btn: self.realizar_jogada(b))
-                self.botoes_grid.append(btn) # adiciona aa lista de botoes
+                btn.config(command=lambda b=btn: self.realizar_jogada(b))
+                self.botoes_grid.append(btn)  # adiciona aa lista de botoes
 
-                btn.grid(row=linha, column=coluna, sticky='nswe') # coloca o botao no frame
-
-        #print(self.posicoes_grid)
-
-        ### Frame com opcoes de configuracao na lateral direita
-        # a-fazer
+                btn.grid(row=linha, column=coluna, sticky='nswe')  # coloca o botao no frame
 
     def realizar_jogada(self, btn):
 

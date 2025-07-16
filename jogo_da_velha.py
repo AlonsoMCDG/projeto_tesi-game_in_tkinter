@@ -139,6 +139,8 @@ class TelaJogoDaVelha(tk.Frame):
             self.vencedor = _JOGADOR_2
             return True
 
+        return False
+
 if __name__ == '__main__':
     gui = tk.Tk()
     #gui.geometry('500x300')

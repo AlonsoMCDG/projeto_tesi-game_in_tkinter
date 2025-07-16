@@ -3,6 +3,7 @@ import tkinter as tk
 ### Constantes
 _JOGADOR_1 = 0
 _JOGADOR_2 = 1
+_SIMBOLOS_JOGADORES = ['X', 'O']
 
 class TelaJogoDaVelha(tk.Frame):
 
@@ -25,28 +26,49 @@ class TelaJogoDaVelha(tk.Frame):
         self.posicoes_grid = [[' ']*3]*3
 
         # widgets de botões do grid
-        self.botoes_grid = [
-            [
-                tk.Button(self.frm_grid,
-                          width=1,
-                          height=1,
-                          padx=40,
-                          pady=40,
-                          relief="solid",
-                          text=f'({linha}, {coluna})')
-                for coluna in range(3)
-            ] for linha in range(3)
-        ]
+        self.botoes_grid = []
+
+        for linha in range(3):
+            for coluna in range(3):
+                btn = tk.Button(self.frm_grid,
+                                width=1,
+                                height=1,
+                                padx=40,
+                                pady=15,
+                                relief="solid",
+                                font=("Arial", 40),
+                                #text=f'({linha}, {coluna})',
+                                )
+
+                # definindo atributos personalizados pros botoes
+                btn.posicao = (linha, coluna) # define um atributo com a linha e coluna da celula
+                btn.valor_preenchido = ' ' # qual valor está preenchido no botão ('X', 'O' ou nenhum)
+
+                btn.config(command = lambda b=btn: self.realizar_jogada(b))
+                self.botoes_grid.append(btn) # adiciona aa lista de botoes
+
+                btn.grid(row=linha, column=coluna, sticky='nswe') # coloca o botao no frame
 
         # Coloca os botoes no grame usando o gerenciador grid
-        for line, row in enumerate(self.botoes_grid):
-            for column, btn in enumerate(row):
-                print(btn, btn.cget("text"))
-                btn.grid(row=line, column=column, sticky='nswe')
+        # for i, btn in enumerate(self.botoes_grid):
+        #     linha = i // 3
+        #     coluna = i % 3
+        #     print(btn, btn.cget("text"))
+        #
+        #     btn.grid(row=linha, column=coluna, sticky='nswe')
 
         print(self.posicoes_grid)
 
-        # Frame com opcoes de configuracao na lateral direita
+        ### Frame com opcoes de configuracao na lateral direita
+
+    def realizar_jogada(self, btn):
+
+        if btn.valor_preenchido == ' ':
+            simbolo = _SIMBOLOS_JOGADORES[self.jogador_com_a_vez]
+            btn.config(text=simbolo)
+            btn.valor_preenchido = simbolo
+            self.jogador_com_a_vez = (self.jogador_com_a_vez + 1) % 2 # passa a vez para o proximo jogador
+
 
 
 if __name__ == '__main__':

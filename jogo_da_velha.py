@@ -1,9 +1,9 @@
 import tkinter as tk
 
 ### Constantes
-_JOGADOR_1 = 0
-_JOGADOR_2 = 1
-_SIMBOLOS_JOGADORES = ['X', 'O']
+_JOGADOR_1 = 1 # 01b
+_JOGADOR_2 = 2 # 10b
+_SIMBOLOS_JOGADORES = [' ', 'X', 'O']
 
 class TelaJogoDaVelha(tk.Frame):
 
@@ -13,6 +13,7 @@ class TelaJogoDaVelha(tk.Frame):
         self.config(width=700, height=500)
         self.pack(fill='both', expand=True)
         self.jogador_com_a_vez = _JOGADOR_1
+        self.vencedor = 0 # ninguém
 
         ### Frame com o nome do jogador 2 (oponente) (no topo da tela)
 
@@ -23,7 +24,8 @@ class TelaJogoDaVelha(tk.Frame):
         self.frm_grid.pack()
 
         # Cria uma matriz 3x3 para guardar os simbolos em cada posicao do grid
-        self.posicoes_grid = [[' ']*3]*3
+        self.posicoes_grid = [[0]*3 for i in range(3)]
+
 
         # widgets de botões do grid
         self.botoes_grid = []
@@ -63,13 +65,55 @@ class TelaJogoDaVelha(tk.Frame):
 
     def realizar_jogada(self, btn):
 
-        if btn.valor_preenchido == ' ':
+        if self.vencedor == 0 and btn.valor_preenchido == ' ':
             simbolo = _SIMBOLOS_JOGADORES[self.jogador_com_a_vez]
             btn.config(text=simbolo)
             btn.valor_preenchido = simbolo
-            self.jogador_com_a_vez = (self.jogador_com_a_vez + 1) % 2 # passa a vez para o proximo jogador
+
+            linha, coluna = btn.posicao
+            self.posicoes_grid[linha][coluna] = self.jogador_com_a_vez
+
+            if self.checar_vitoria():
+                return
+
+            # passa a vez para o proximo jogador
+            if self.jogador_com_a_vez == _JOGADOR_1:
+                self.jogador_com_a_vez = _JOGADOR_2
+            else:
+                self.jogador_com_a_vez = _JOGADOR_1
 
 
+
+
+    def checar_vitoria(self):
+        #01, 10, 01
+        #01, 01, 10
+        #10, 01, 10
+
+        g = self.posicoes_grid
+        alguem_venceu = False
+
+        print("-----")
+        print(self.posicoes_grid)
+        # linhas:
+        for l in range(3):
+            res = g[l][0] & g[l][1] & g[l][2]
+
+            print(f'Linha {l}: {res}')
+            print(g[l][0], g[l][1], g[l][2])
+
+            if res == _JOGADOR_1:
+                print("JOgador 1 venceu")
+                self.vencedor = _JOGADOR_1
+                return True
+
+            if res == _JOGADOR_2:
+                print("JOgador 2 venceu")
+                self.vencedor = _JOGADOR_2
+                return True
+
+        # colunas
+        return False
 
 if __name__ == '__main__':
     gui = tk.Tk()

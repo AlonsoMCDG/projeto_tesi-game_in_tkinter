@@ -15,7 +15,6 @@ class TelaJogoDaVelha(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
         self.janela = master
-        self.pack(fill='both', expand=True)
         self._jogador_com_a_vez = tk.IntVar(value=TelaJogoDaVelha.JOGADOR_1)
         #self.jogador_com_a_vez = TelaJogoDaVelha.JOGADOR_1
         self.vencedor = TelaJogoDaVelha.SEM_VENCEDOR # ninguém
@@ -285,12 +284,14 @@ class FrameConfiguracoes(tk.Frame):
 
         tk.Label(container_vitorias, text='Jogador 1').grid(row=0, column=0)
         tk.Label(container_vitorias,
+                 width=3,
                  textvariable=self.controlador.vitorias[TelaJogoDaVelha.JOGADOR_1],
                  font=("TkDefaultFont", 50)
                  ).grid(row=1, column=0)
 
         tk.Label(container_vitorias, text='Jogador 2').grid(row=0, column=1)
         tk.Label(container_vitorias,
+                 width=3,
                  textvariable=self.controlador.vitorias[TelaJogoDaVelha.JOGADOR_2],
                  font=("TkDefaultFont", 50)
                  ).grid(row=1, column=1)
@@ -324,6 +325,6 @@ if __name__ == '__main__':
     gui = tk.Tk()
     gui.resizable(False, False)
     #gui.geometry('500x300')
-    TelaJogoDaVelha(gui)
+    TelaJogoDaVelha(gui).pack()
 
     gui.mainloop()

@@ -52,6 +52,8 @@ class Tela(tk.Frame):
 if __name__ == '__main__':
     gui = tk.Tk()
     gui.geometry('600x500')
+    gui.title("Central de Jogos")
     gui.resizable(False, False)
+    
     Tela(gui).pack(fill='both', expand=True)
     gui.mainloop()

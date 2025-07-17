@@ -127,8 +127,9 @@ class FrameGridJogo(tk.Frame):
             self.posicoes_grid[linha][coluna] = vez
 
             if self.checar_se_jogo_acabou():
-                self.controlador.incrementar_vitoria_para_o_jogador(self.controlador.get_vencedor())
-                return
+                if self.controlador.get_vencedor() != TelaJogoDaVelha.EMPATE:
+                    self.controlador.incrementar_vitoria_para_o_jogador(self.controlador.get_vencedor())
+                    return
 
             self.controlador.passar_a_vez()
 

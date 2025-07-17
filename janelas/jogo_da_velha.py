@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter import messagebox
 
 
@@ -13,10 +14,15 @@ class TelaJogoDaVelha(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
         self.janela = master
-        self.config(width=700, height=500)
         self.pack(fill='both', expand=True)
-        self.jogador_com_a_vez = TelaJogoDaVelha.JOGADOR_1
+        self._jogador_com_a_vez = tk.IntVar(value=TelaJogoDaVelha.JOGADOR_1)
+        #self.jogador_com_a_vez = TelaJogoDaVelha.JOGADOR_1
         self.vencedor = TelaJogoDaVelha._SEM_VENCEDOR # ninguém
+
+        ### Frame com opcoes de configuracao na lateral direita
+        self.frmConfiguracoes = FrameConfiguracoes(self)
+        self.frmConfiguracoes.pack(side='right', fill='both', expand=True)
+        self.frmConfiguracoes.pack_propagate(False)
 
         ### Frame com o nome do jogador 2 (oponente) (no topo da tela)
         # a-fazer
@@ -25,18 +31,17 @@ class TelaJogoDaVelha(tk.Frame):
         # a-fazer
 
         ### Frame com o grid 3x3 no centro
-        self.frmGridJogo = FrameGridJogo(self, self)
-        self.frmGridJogo.pack()
-
-        ### Frame com opcoes de configuracao na lateral direita
-        FrameConfiguracoes(self).pack()
+        self.frmGridJogo = FrameGridJogo(self)
+        self.frmGridJogo.pack(padx=10, pady=10, fill='both', expand=True)
 
     def passar_a_vez(self):
         # passa a vez para o proximo jogador
-        if self.jogador_com_a_vez == TelaJogoDaVelha.JOGADOR_1:
-            self.jogador_com_a_vez = TelaJogoDaVelha.JOGADOR_2
+        if self._jogador_com_a_vez.get() == TelaJogoDaVelha.JOGADOR_1:
+            # self.jogador_com_a_vez = TelaJogoDaVelha.JOGADOR_2
+            self._jogador_com_a_vez.set(TelaJogoDaVelha.JOGADOR_2)
         else:
-            self.jogador_com_a_vez = TelaJogoDaVelha.JOGADOR_1
+            #self.jogador_com_a_vez = TelaJogoDaVelha.JOGADOR_1
+            self._jogador_com_a_vez.set(TelaJogoDaVelha.JOGADOR_1)
 
     def jogo_rolando(self):
         return self.vencedor == TelaJogoDaVelha._SEM_VENCEDOR
@@ -44,21 +49,37 @@ class TelaJogoDaVelha(tk.Frame):
     def alterar_vencedor(self, vencedor):
         self.vencedor = vencedor
 
+    def get_jogador_com_a_vez(self):
+        return self._jogador_com_a_vez.get()
+
+    def add_trace_callback(self, callback):
+        self._jogador_com_a_vez.trace_add('write', callback)
+
+    def reiniciar_partida(self):
+        self.frmGridJogo.reiniciar_partida()
+        self._jogador_com_a_vez.set(TelaJogoDaVelha.JOGADOR_1)
+        self.alterar_vencedor(TelaJogoDaVelha._SEM_VENCEDOR)
 
 class FrameGridJogo(tk.Frame):
-    def __init__(self, master, controlador):
+    def __init__(self, master: TelaJogoDaVelha):
         super().__init__(master)
         print('master de grid:', self.master)
-        self.controlador = controlador
+        self.controlador = master
+        self.frame = tk.Frame(self)
+        self.frame.pack()
 
         # widgets de botões do grid
         self.botoes_grid = []
 
-        self.posicoes_grid = [[0]*3 for i in range(3)] # matriz com os símbolos em cada célula do grid
+        self.posicoes_grid = self.nova_matriz_de_posicoes() # matriz com os símbolos em cada célula do grid
 
+        self.inserir_botoes()
+    
+    def inserir_botoes(self):
+        self.botoes_grid = []
         for linha in range(3):
             for coluna in range(3):
-                btn = tk.Button(self,
+                btn = tk.Button(self.frame,
                                 width=1,
                                 height=1,
                                 padx=40,
@@ -78,7 +99,7 @@ class FrameGridJogo(tk.Frame):
                 btn.grid(row=linha, column=coluna, sticky='nswe')  # coloca o botao no frame
 
     def realizar_jogada(self, btn):
-        vez = self.controlador.jogador_com_a_vez
+        vez = self.controlador.get_jogador_com_a_vez()
         if self.controlador.jogo_rolando() and self.celula_esta_vazia(btn):
             simbolo = TelaJogoDaVelha.SIMBOLOS_JOGADORES[vez]
             btn.config(text=simbolo)
@@ -164,6 +185,14 @@ class FrameGridJogo(tk.Frame):
         # Ninguém venceu ainda
         return False
 
+    def reiniciar_partida(self):
+        self.inserir_botoes()
+        self.posicoes_grid = self.nova_matriz_de_posicoes()
+
+    @staticmethod
+    def nova_matriz_de_posicoes():
+        return [[0]*3 for i in range(3)]
+
     @staticmethod
     def linha_e_coluna_para_indice(linha, coluna, num_linhas=3, num_colunas=3):
         return linha * num_colunas + coluna
@@ -191,13 +220,90 @@ class FrameGridJogo(tk.Frame):
         return btn.valor_preenchido == ' '
 
 class FrameConfiguracoes(tk.Frame):
-    def __init__(self, master):
-        super().__init__(master)
+    def __init__(self, master: TelaJogoDaVelha):
+        super().__init__(master, bg='#336633', width=300)
         print('master de configuracoes:', self.master)
+        self.controlador = master
+
+        # Divide a tela em 3 linhas de tamanho igual/parecido
+        for i in range(3):
+            self.rowconfigure(i, weight=1)
+        self.columnconfigure(0, weight=1)
+
+        ### Seção Partida
+
+        cor_fundo = '#456456'
+        frm_partida = tk.Frame(self, width=200, bg=cor_fundo)
+        frm_partida.grid(row=0, column=0, sticky='nsew')#pack(fill='both', expand=True)
+
+        tk.Label(frm_partida, text='Partida').pack(pady=5)
+        ttk.Separator(frm_partida, orient='horizontal').pack(fill='x', padx=10, pady=5)
+
+        container_vez = tk.Frame(frm_partida)
+        container_vez.pack()
+        self.strvar_vez_jogador = tk.StringVar(value='x')
+        self.controlador.add_trace_callback(self.atualizar_label_vez_jogador)
+        tk.Label(container_vez,
+                 text='Vez:').pack(side='left')
+        tk.Label(container_vez,
+                 textvariable=self.strvar_vez_jogador,
+                 font=("TkDefaultFont", 50)).pack()
+
+        ### Seção Vitorias
+
+        cor_fundo = '#567567'
+        frm_vitorias = tk.Frame(self, width=200, bg=cor_fundo)
+        frm_vitorias.grid(row=1, column=0, sticky='nsew')
+
+        tk.Label(frm_vitorias, text='Vitórias').pack(pady=5)
+        ttk.Separator(frm_vitorias, orient='horizontal').pack(fill='x', padx=10, pady=5)
+
+        container_vitorias = tk.Frame(frm_vitorias)
+        container_vitorias.pack(fill='both', expand=True, padx=10, pady=10)
+
+        container_vitorias.columnconfigure(0, weight=1)
+        container_vitorias.columnconfigure(1, weight=1)
+
+        tk.Label(container_vitorias, text='Jogador 1').grid(row=0, column=0)
+        tk.Label(container_vitorias,
+                 text='0',
+                 font=("TkDefaultFont", 50)
+                 ).grid(row=1, column=0)
+
+        tk.Label(container_vitorias, text='Jogador 2').grid(row=0, column=1)
+        tk.Label(container_vitorias,
+                 text='0',
+                 font=("TkDefaultFont", 50)
+                 ).grid(row=1, column=1)
+
+        ### Seção Opcoes
+
+        cor_fundo = '#678678'
+        frm_opcoes = tk.Frame(self, width=200, bg=cor_fundo)
+        frm_opcoes.grid(row=2, column=0, sticky='nsew')
+
+        tk.Label(frm_opcoes, text='Opções').pack(pady=5)
+        ttk.Separator(frm_opcoes, orient='horizontal').pack(fill='x', padx=10, pady=5)
+
+        container_opcoes = tk.Frame(frm_opcoes)
+        container_opcoes.pack()
+
+        tk.Button(container_opcoes,
+                  text='Reiniciar partida',
+                  command=self.controlador.reiniciar_partida
+                  ).pack(ipadx=20, ipady=20)
+
+        tk.Canvas(self, width=300, height=1).grid()
+
+    def atualizar_label_vez_jogador(self, *args):
+        vez = self.controlador.get_jogador_com_a_vez()
+        simbolo = self.controlador.SIMBOLOS_JOGADORES[vez]
+        self.strvar_vez_jogador.set(simbolo)
 
 
 if __name__ == '__main__':
     gui = tk.Tk()
+    gui.resizable(False, False)
     #gui.geometry('500x300')
     TelaJogoDaVelha(gui)
 

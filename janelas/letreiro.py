@@ -61,6 +61,7 @@ class Letreiro:
 
             self.janela.after(500, self.animar_canvas)
 
-gui = tk.Tk()
-Letreiro(gui)
-gui.mainloop()
+if __name__ == '__main__':
+    gui = tk.Tk()
+    Letreiro(gui)
+    gui.mainloop()

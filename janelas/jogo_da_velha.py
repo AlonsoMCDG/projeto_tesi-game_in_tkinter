@@ -1,11 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+from wsgiref.util import request_uri
 
 
 class TelaJogoDaVelha(tk.Frame):
     ### Constantes
-    _SEM_VENCEDOR = 0
+    SEM_VENCEDOR = 0
     JOGADOR_1 = 1  # 01b
     JOGADOR_2 = 2  # 10b
     EMPATE = 4
@@ -17,7 +18,11 @@ class TelaJogoDaVelha(tk.Frame):
         self.pack(fill='both', expand=True)
         self._jogador_com_a_vez = tk.IntVar(value=TelaJogoDaVelha.JOGADOR_1)
         #self.jogador_com_a_vez = TelaJogoDaVelha.JOGADOR_1
-        self.vencedor = TelaJogoDaVelha._SEM_VENCEDOR # ninguém
+        self.vencedor = TelaJogoDaVelha.SEM_VENCEDOR # ninguém
+        self.vitorias = {
+            TelaJogoDaVelha.JOGADOR_1: tk.IntVar(value=0),
+            TelaJogoDaVelha.JOGADOR_2: tk.IntVar(value=0)
+        }
 
         ### Frame com opcoes de configuracao na lateral direita
         self.frmConfiguracoes = FrameConfiguracoes(self)
@@ -44,13 +49,26 @@ class TelaJogoDaVelha(tk.Frame):
             self._jogador_com_a_vez.set(TelaJogoDaVelha.JOGADOR_1)
 
     def jogo_rolando(self):
-        return self.vencedor == TelaJogoDaVelha._SEM_VENCEDOR
+        return self.vencedor == TelaJogoDaVelha.SEM_VENCEDOR
 
     def alterar_vencedor(self, vencedor):
         self.vencedor = vencedor
 
+    def get_vencedor(self):
+        return self.vencedor
+
     def get_jogador_com_a_vez(self):
         return self._jogador_com_a_vez.get()
+
+    def get_vitorias_do_jogador(self, jogador):
+        return self.vitorias[jogador].get()
+
+    def set_vitorias_do_jogador(self, jogador, vitorias):
+        if vitorias >= 0:
+            self.vitorias[jogador].set(vitorias)
+
+    def incrementar_vitoria_para_o_jogador(self, jogador):
+        self.vitorias[jogador].set(self.vitorias[jogador].get() + 1)
 
     def add_trace_callback(self, callback):
         self._jogador_com_a_vez.trace_add('write', callback)
@@ -58,7 +76,7 @@ class TelaJogoDaVelha(tk.Frame):
     def reiniciar_partida(self):
         self.frmGridJogo.reiniciar_partida()
         self._jogador_com_a_vez.set(TelaJogoDaVelha.JOGADOR_1)
-        self.alterar_vencedor(TelaJogoDaVelha._SEM_VENCEDOR)
+        self.alterar_vencedor(TelaJogoDaVelha.SEM_VENCEDOR)
 
 class FrameGridJogo(tk.Frame):
     def __init__(self, master: TelaJogoDaVelha):
@@ -109,6 +127,7 @@ class FrameGridJogo(tk.Frame):
             self.posicoes_grid[linha][coluna] = vez
 
             if self.checar_se_jogo_acabou():
+                self.controlador.incrementar_vitoria_para_o_jogador(self.controlador.get_vencedor())
                 return
 
             self.controlador.passar_a_vez()
@@ -266,13 +285,13 @@ class FrameConfiguracoes(tk.Frame):
 
         tk.Label(container_vitorias, text='Jogador 1').grid(row=0, column=0)
         tk.Label(container_vitorias,
-                 text='0',
+                 textvariable=self.controlador.vitorias[TelaJogoDaVelha.JOGADOR_1],
                  font=("TkDefaultFont", 50)
                  ).grid(row=1, column=0)
 
         tk.Label(container_vitorias, text='Jogador 2').grid(row=0, column=1)
         tk.Label(container_vitorias,
-                 text='0',
+                 textvariable=self.controlador.vitorias[TelaJogoDaVelha.JOGADOR_2],
                  font=("TkDefaultFont", 50)
                  ).grid(row=1, column=1)
 

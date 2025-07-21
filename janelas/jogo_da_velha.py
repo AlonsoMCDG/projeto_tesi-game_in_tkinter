@@ -45,7 +45,6 @@ class TelaJogoDaVelha(tk.Frame):
         # passa a vez para o proximo jogador
         if self._jogador_com_a_vez.get() == TelaJogoDaVelha.JOGADOR_1:
             self._jogador_com_a_vez.set(TelaJogoDaVelha.JOGADOR_2)
-            #print('Vez do jogador 2')
 
             # se o jogo acabou, não tenta chamar o bot
             if self.vencedor != self.SEM_VENCEDOR:
@@ -60,7 +59,6 @@ class TelaJogoDaVelha(tk.Frame):
             self.frmGridJogo.realizar_jogada(btn) # realiza a jogada
         else:
             self._jogador_com_a_vez.set(TelaJogoDaVelha.JOGADOR_1)
-            print('Vez do jogador 1')
 
     def jogo_rolando(self):
         return self.vencedor == TelaJogoDaVelha.SEM_VENCEDOR

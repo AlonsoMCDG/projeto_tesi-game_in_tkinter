@@ -20,7 +20,7 @@ class Tela(tk.Frame):
                             ),
             self.novo_frame(master=self.frm_lista_de_jogos,
                             titulo='Jogo da Velha',
-                            descricao='Jogue o jogo da velha',
+                            descricao='Jogue o clássico jogo da velha',
                             jogo=TelaJogoDaVelha
                             )
         ]
@@ -45,7 +45,10 @@ class Tela(tk.Frame):
     def abrir_tela(self, alvo, titulo):
         tela = tk.Toplevel(self)
         tela.title(titulo)
-        alvo(tela).pack()
+        try:
+            alvo(tela).pack()
+        except Exception as e:
+            print(e)
 
         pass
 

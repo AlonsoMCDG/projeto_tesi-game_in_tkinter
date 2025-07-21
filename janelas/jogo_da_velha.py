@@ -1,4 +1,5 @@
 import tkinter as tk
+from functools import reduce
 from tkinter import ttk
 from tkinter import messagebox
 from wsgiref.util import request_uri
@@ -23,6 +24,7 @@ class TelaJogoDaVelha(tk.Frame):
             TelaJogoDaVelha.JOGADOR_1: tk.IntVar(value=0),
             TelaJogoDaVelha.JOGADOR_2: tk.IntVar(value=0)
         }
+        self.CPU = CPU(identificador=self.JOGADOR_2, oponente=self.JOGADOR_1) # bot para jogar no lugar do jogador 2
 
         ### Frame com opcoes de configuracao na lateral direita
         self.frmConfiguracoes = FrameConfiguracoes(self)
@@ -42,11 +44,23 @@ class TelaJogoDaVelha(tk.Frame):
     def passar_a_vez(self):
         # passa a vez para o proximo jogador
         if self._jogador_com_a_vez.get() == TelaJogoDaVelha.JOGADOR_1:
-            # self.jogador_com_a_vez = TelaJogoDaVelha.JOGADOR_2
             self._jogador_com_a_vez.set(TelaJogoDaVelha.JOGADOR_2)
+            #print('Vez do jogador 2')
+
+            # se o jogo acabou, não tenta chamar o bot
+            if self.vencedor != self.SEM_VENCEDOR:
+                return
+
+            tabuleiro = self.frmGridJogo.posicoes_grid.copy() # tabuleiro do jogo
+            jogada = self.CPU.escolher_proximo_lance(tabuleiro) # escolhe próxima jogada
+            indice_botao = self.frmGridJogo.linha_e_coluna_para_indice(jogada[0], jogada[1])
+            btn = self.frmGridJogo.botoes_grid[indice_botao] # botão na posição da jogada
+
+
+            self.frmGridJogo.realizar_jogada(btn) # realiza a jogada
         else:
-            #self.jogador_com_a_vez = TelaJogoDaVelha.JOGADOR_1
             self._jogador_com_a_vez.set(TelaJogoDaVelha.JOGADOR_1)
+            print('Vez do jogador 1')
 
     def jogo_rolando(self):
         return self.vencedor == TelaJogoDaVelha.SEM_VENCEDOR
@@ -92,7 +106,7 @@ class FrameGridJogo(tk.Frame):
         self.posicoes_grid = self.nova_matriz_de_posicoes() # matriz com os símbolos em cada célula do grid
 
         self.inserir_botoes()
-    
+
     def inserir_botoes(self):
         self.botoes_grid = []
         for linha in range(3):
@@ -197,7 +211,7 @@ class FrameGridJogo(tk.Frame):
             for j in range(3):
                 soma += g[i][j]
         if soma == 13: # todas as posicoes estao preenchidas
-            print("Empate!!")
+            print("Fim de jogo: Empate!!")
             self.controlador.alterar_vencedor(TelaJogoDaVelha.EMPATE)
             self.destacar_botoes(*bt)
             return True
@@ -211,7 +225,9 @@ class FrameGridJogo(tk.Frame):
 
     @staticmethod
     def nova_matriz_de_posicoes():
-        return [[0]*3 for i in range(3)]
+        mat = [[0]*3 for i in range(3)]
+        #print(f'Nova matriz: {mat}')
+        return mat
 
     @staticmethod
     def linha_e_coluna_para_indice(linha, coluna, num_linhas=3, num_colunas=3):
@@ -224,12 +240,12 @@ class FrameGridJogo(tk.Frame):
 
     def _ha_vencedor(self, validagem):
         if validagem == TelaJogoDaVelha.JOGADOR_1:
-            print("Jogador 1 venceu")
+            print("Fim de jogo: Jogador 1 venceu")
             self.controlador.alterar_vencedor(TelaJogoDaVelha.JOGADOR_1)
             return True
 
         if validagem == TelaJogoDaVelha.JOGADOR_2:
-            print("Jogador 2 venceu")
+            print("Fim de jogo: Jogador 2 venceu")
             self.controlador.alterar_vencedor(TelaJogoDaVelha.JOGADOR_2)
             return True
 
@@ -322,6 +338,100 @@ class FrameConfiguracoes(tk.Frame):
         simbolo = self.controlador.SIMBOLOS_JOGADORES[vez]
         self.strvar_vez_jogador.set(simbolo)
 
+class CPU:
+    def __init__(self, identificador: int, oponente: int):
+        self.identificador = identificador # identificador de qual jogador/simbolo a IA é
+        self.identificador_oponente = oponente
+        self.print_debug = False
+
+    @staticmethod
+    def get_lances_disponiveis(tabuleiro):
+        lances = []
+        for i in range(3):
+            for j in range(3):
+                if tabuleiro[i][j] == 0:  # 0 significa célula vazia
+                    lances.append((i, j))
+
+        return lances
+
+    def get_score_de_fim_de_partida(self, vencedor):
+        if vencedor == self.identificador:
+            return +1
+        if vencedor == self.identificador_oponente:
+            return -1
+        return 0
+
+    def escolher_proximo_lance(self, tabuleiro):
+
+        # salvar quais são os lances diponíveis na posição
+        escolha = self.get_lances_disponiveis(tabuleiro)
+
+        if len(escolha) == 0:
+            raise ValueError("O bot não tem lances na posição. Não chame-o nesses casos.")
+
+        # calcula a pontuação de cada lance
+        scores = [0] * len(escolha)
+
+        for i in range(len(escolha)):
+            lin, col = escolha[i]
+            tabuleiro[lin][col] = self.identificador # realiza o lance do bot
+            scores[i] = self.min(tabuleiro, lin, col)
+            tabuleiro[lin][col] = 0 # desfaz o lance
+
+        return escolha[scores.index(max(scores))]
+
+    def min(self, tabuleiro, line, column):
+        # lances da posição
+        lances = self.get_lances_disponiveis(tabuleiro)
+
+        # se a partida acabou, retorna o vencedor
+        resultado = self.get_vencedor_da_posicao(tabuleiro)
+        if len(lances) == 0 or resultado != 0:
+            return self.get_score_de_fim_de_partida(resultado)
+
+        # calcula a pontuação de cada lance
+        scores = [0] * len(lances)
+
+        for i in range(len(lances)):
+            lin, col = lances[i]
+            tabuleiro[lin][col] = self.identificador_oponente # realiza o lance do oponente
+            scores[i] = self.max(tabuleiro, lin, col)
+            tabuleiro[lin][col] = 0 # desfaz o lance
+
+        return min(scores)
+
+    def max(self, tabuleiro, line, column):
+        # lances da posição
+        lances = self.get_lances_disponiveis(tabuleiro)
+
+        # se a partida acabou, retorna o vencedor
+        resultado = self.get_vencedor_da_posicao(tabuleiro)
+        if len(lances) == 0 or resultado != 0:
+            return self.get_score_de_fim_de_partida(resultado)
+
+        # calcula a pontuação de cada lance
+        scores = [0] * len(lances)
+
+        for i in range(len(lances)):
+            lin, col = lances[i]
+            tabuleiro[lin][col] = self.identificador # realiza o lance do bot
+            scores[i] = self.min(tabuleiro, lin, col)
+            tabuleiro[lin][col] = 0 # desfaz o lance
+
+        return max(scores)
+
+    @staticmethod
+    def get_vencedor_da_posicao(tabuleiro):
+        vencedor = 0 # ninguém
+
+        # usa o operador binário & (AND) para verificar se existe 3 símbolos iguais em sequência
+        # e acumula o resultado de tudo com o operador binário | (OR)
+        for i in range(3): vencedor |= reduce(lambda x, y: x & y, tabuleiro[i])
+        for j in range(3): vencedor |= reduce(lambda x, y: x & y, [tabuleiro[i][j] for i in range(3)])
+        vencedor |= reduce(lambda x, y: x & y, [tabuleiro[i][i] for i in range(3)])
+        vencedor |= reduce(lambda x, y: x & y, [tabuleiro[i][2-i] for i in range(3)])
+
+        return vencedor
 
 if __name__ == '__main__':
     gui = tk.Tk()

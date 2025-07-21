@@ -1,16 +1,48 @@
 from functools import reduce
+import random
 
 class CPU:
-    def __init__(self, identificador: int, oponente: int):
+    # dificuldades de jogo do bot
+    DIFICULDADE_FACIL = 0
+    DIFICULDADE_MEDIA = 1
+    DIFICULDADE_DIFICIL = 2
+    DIFICULDADE_EXTREMA = 3
+
+    # probabilidade de cada lance dependendo da dificuldade do bot
+    probabilidades = {
+        DIFICULDADE_FACIL: {
+            1: 20, 
+            0: 20, 
+            -1: 60
+        },
+        DIFICULDADE_MEDIA: {
+            1: 55, 
+            0: 20, 
+            -1: 5
+        },
+        DIFICULDADE_DIFICIL: {
+            1: 90, 
+            0: 5, 
+            -1: 5
+        },
+        DIFICULDADE_EXTREMA: {
+            1: 98, 
+            0: 1, 
+            -1: 1
+        }
+    }
+
+    def __init__(self, identificador: int, oponente: int, dificuldade = DIFICULDADE_MEDIA):
         self.identificador = identificador # identificador de qual jogador/simbolo a IA é
         self.identificador_oponente = oponente
+        self.dificuldade = dificuldade
         self.print_debug = False
 
     def get_lances_disponiveis(self, tabuleiro):
         lances = []
         for i in range(3):
             for j in range(3):
-                if tabuleiro[i][j] == 0:  # 0 significa célula vazia
+                if tabuleiro[i][j] == 0:  # == 0 significa célula vazia
                     lances.append((i, j))
 
         return lances
@@ -25,27 +57,34 @@ class CPU:
     def escolher_proximo_lance(self, tabuleiro):
 
         # salvar quais são os lances diponíveis na posição
-        escolha = self.get_lances_disponiveis(tabuleiro)
+        lances_validos = self.get_lances_disponiveis(tabuleiro)
 
-        if len(escolha) == 0:
-            raise ValueError("O bot não tem lances na posição. Não chame-o nesses casos.")
+        if len(lances_validos) == 0:
+            raise ValueError("O bot não tem lances válidos na posição. Não chame-o nesses casos.")
 
         # calcula a pontuação de cada lance
-        scores = [0] * len(escolha)
+        scores = [0] * len(lances_validos)
 
-        for i in range(len(escolha)):
-            lin, col = escolha[i]
+        for i in range(len(lances_validos)):
+            lin, col = lances_validos[i]
             tabuleiro[lin][col] = self.identificador # realiza o lance do bot
             scores[i] = self.min(tabuleiro, lin, col)
 
-            if scores[i] == 1:      # otimização - se achou um caminho ótimo,
-                return escolha[i]   # jogue-o
-
             tabuleiro[lin][col] = 0 # desfaz o lance
+        
+        ## escolhe o lance dependendo da dificuldade do bot
 
-        #print(f'{escolha =}\n{scores =}')
+        resultados = list(set(scores)) # remove os repetidos
+        pesos = [CPU.probabilidades[self.dificuldade][i] for i in resultados]
+        escolha = random.choices(resultados, weights=pesos)[0]
+        
+        # pega os lances com o mesmo score
+        lances_com_score_escolhido = [lances_validos[i] for i in range(len(lances_validos)) if scores[i] == escolha]
 
-        return escolha[scores.index(max(scores))]
+        # escolhe um lance aleatório dentro os disponíveis
+        lance_jogado = random.choice(lances_com_score_escolhido)
+        
+        return lance_jogado
 
     def min(self, tabuleiro, line, column):
         # lances da posição

@@ -342,8 +342,7 @@ class CPU:
         self.identificador_oponente = oponente
         self.print_debug = False
 
-    @staticmethod
-    def get_lances_disponiveis(tabuleiro):
+    def get_lances_disponiveis(self, tabuleiro):
         lances = []
         for i in range(3):
             for j in range(3):
@@ -374,7 +373,13 @@ class CPU:
             lin, col = escolha[i]
             tabuleiro[lin][col] = self.identificador # realiza o lance do bot
             scores[i] = self.min(tabuleiro, lin, col)
+
+            if scores[i] == 1:      # otimização - se achou um caminho ótimo,
+                return escolha[i]   # jogue-o
+
             tabuleiro[lin][col] = 0 # desfaz o lance
+
+        #print(f'{escolha =}\n{scores =}')
 
         return escolha[scores.index(max(scores))]
 
@@ -394,6 +399,10 @@ class CPU:
             lin, col = lances[i]
             tabuleiro[lin][col] = self.identificador_oponente # realiza o lance do oponente
             scores[i] = self.max(tabuleiro, lin, col)
+
+            #if scores[i] == -1: # otimização
+            #    return -1       # se achou um caminho ótimo, pare a busca
+
             tabuleiro[lin][col] = 0 # desfaz o lance
 
         return min(scores)
@@ -414,9 +423,26 @@ class CPU:
             lin, col = lances[i]
             tabuleiro[lin][col] = self.identificador # realiza o lance do bot
             scores[i] = self.min(tabuleiro, lin, col)
+
+            #if scores[i] == 1:  # otimização
+            #    return 1        # se achou um caminho ótimo, pare a busca
+
             tabuleiro[lin][col] = 0 # desfaz o lance
 
         return max(scores)
+
+    @staticmethod
+    def get_vencedor_da_posicao(tabuleiro):
+        vencedor = 0 # ninguém
+
+        # usa o operador binário & (AND) para verificar se existe 3 símbolos iguais em sequência
+        # e acumula o resultado de tudo com o operador binário | (OR)
+        for i in range(3): vencedor |= reduce(lambda x, y: x & y, tabuleiro[i])
+        for j in range(3): vencedor |= reduce(lambda x, y: x & y, [tabuleiro[i][j] for i in range(3)])
+        vencedor |= reduce(lambda x, y: x & y, [tabuleiro[i][i] for i in range(3)])
+        vencedor |= reduce(lambda x, y: x & y, [tabuleiro[i][2-i] for i in range(3)])
+
+        return vencedor
 
     @staticmethod
     def get_vencedor_da_posicao(tabuleiro):

@@ -37,9 +37,13 @@ class CPU:
             lin, col = escolha[i]
             tabuleiro[lin][col] = self.identificador # realiza o lance do bot
             scores[i] = self.min(tabuleiro, lin, col)
+
+            if scores[i] == 1:      # otimização - se achou um caminho ótimo,
+                return escolha[i]   # jogue-o
+
             tabuleiro[lin][col] = 0 # desfaz o lance
 
-        print(f'{escolha =}\n{scores =}')
+        #print(f'{escolha =}\n{scores =}')
 
         return escolha[scores.index(max(scores))]
 
@@ -59,6 +63,10 @@ class CPU:
             lin, col = lances[i]
             tabuleiro[lin][col] = self.identificador_oponente # realiza o lance do oponente
             scores[i] = self.max(tabuleiro, lin, col)
+
+            #if scores[i] == -1: # otimização
+            #    return -1       # se achou um caminho ótimo, pare a busca
+
             tabuleiro[lin][col] = 0 # desfaz o lance
 
         return min(scores)
@@ -79,6 +87,10 @@ class CPU:
             lin, col = lances[i]
             tabuleiro[lin][col] = self.identificador # realiza o lance do bot
             scores[i] = self.min(tabuleiro, lin, col)
+
+            #if scores[i] == 1:  # otimização
+            #    return 1        # se achou um caminho ótimo, pare a busca
+
             tabuleiro[lin][col] = 0 # desfaz o lance
 
         return max(scores)

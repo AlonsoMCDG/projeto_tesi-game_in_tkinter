@@ -2,6 +2,7 @@ import tkinter as tk
 
 from jogo_da_velha import TelaJogoDaVelha
 from letreiro import Letreiro
+from connect_four import TelaConnectFour
 
 class Tela(tk.Frame):
     def __init__(self, master):
@@ -22,7 +23,12 @@ class Tela(tk.Frame):
                             titulo='Jogo da Velha',
                             descricao='Jogue o clássico jogo da velha',
                             jogo=TelaJogoDaVelha
-                            )
+                            ),
+            self.novo_frame(master=self.frm_lista_de_jogos,
+                            titulo='Connect 4',
+                            descricao='Jogue Conneect 4',
+                            jogo=TelaConnectFour
+                            ),
         ]
 
         for i, frm in enumerate(self.frames_jogos):

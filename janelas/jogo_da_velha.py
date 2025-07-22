@@ -17,6 +17,7 @@ class TelaJogoDaVelha(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
         master.resizable(False, False)
+        master.title('Jogo da Velha')
         self.janela = master
         self._jogador_com_a_vez = tk.IntVar(value=TelaJogoDaVelha.JOGADOR_1)
         #self.jogador_com_a_vez = TelaJogoDaVelha.JOGADOR_1

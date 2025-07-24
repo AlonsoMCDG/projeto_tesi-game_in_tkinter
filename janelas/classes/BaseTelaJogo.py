@@ -39,6 +39,9 @@ class BaseTelaJogo(tk.Frame):
     
     def get_vencedor(self):
         return self.vencedor
+    
+    def alterar_vencedor(self, vencedor):
+        self.vencedor = vencedor
 
     def get_jogador_com_a_vez(self):
         return self._jogador_com_a_vez.get()

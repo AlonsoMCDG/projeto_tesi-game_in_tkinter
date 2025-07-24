@@ -95,7 +95,7 @@ class TelaConnectFour(tk.Frame):
     def get_cor_jogador_com_a_vez(self):
         cor = TelaConnectFour.CORES_JOGADORES[self.get_jogador_com_a_vez()]
         return cor
-    
+
 class FrameGridJogo(tk.Frame):
     def __init__(self, master: TelaConnectFour, LINHAS: int, COLUNAS: int):
         super().__init__(master)

@@ -8,12 +8,14 @@ class TelaSlotMachine(tk.Frame):
         self.master.geometry("500x480")
         self.master.config(bg="#1C1031")
 
-        self.frm_visores = tk.Frame(self, bg="#abad29")
+        self.frm_visores = tk.Frame(self, bg='#abad29')
         self.frm_visores.pack()
         self.visores = [
             FrameVisorMachine(self.frm_visores, 
+                              controle = self, 
                               numero_de_slots=4, 
-                              cores=["#FF0000", "#00E1FF", "#0077FF", "#1CFF1C"],
+                              figuras=['7', 'laranja', 'limão', 'cereja', 'diamante', 'dado', 'estrela'], 
+                              cores=['#FF0000', '#00E1FF', '#0077FF', '#1CFF1C', "#DDFF1C", "#FF1CF4", "#1CFFCA"],
                               cor_inicial=i, 
                               )
             for i in range(3)
@@ -21,6 +23,9 @@ class TelaSlotMachine(tk.Frame):
 
         for v in self.visores:
             v.pack(side='left', pady=15)
+
+        self.simbolos_selecionados = 0
+        self.simbolos_necessarios = 3
 
         self.alavanca = tk.Button(self, 
                                   text="Girar", 
@@ -33,14 +38,33 @@ class TelaSlotMachine(tk.Frame):
         for v in self.visores:
             v.iniciar_animacao()
         # print(self.winfo_width(), self.winfo_height())
+    
+    def rotina_fim_de_jogo(self):
+        self.simbolos_selecionados += 1
+
+        if self.simbolos_selecionados < self.simbolos_necessarios:
+            return
+        
+        simbolos = [
+            slot.get_figura_slot_central()[0]
+            for slot in self.visores
+        ]
+        
+        print('resultado:', simbolos)
+
+        self.simbolos_selecionados = 0
+            
 
 class FrameVisorMachine(tk.Frame):
     # Constantes de acesso
     X = 0
     Y = 1
     
-    def __init__(self, master, largura=100, altura=300, cor_inicial=0, numero_de_slots=1, cores=['blue']):
+    def __init__(self, master, controle, largura=100, altura=300, cor_inicial=0, numero_de_slots=1, figuras=['7'], cores=['blue']):
         super().__init__(master)
+
+        # Clase controle do jogo
+        self.controle = controle
         
         ### Elemento canvas onde as imagens serão desenhadas
         self.canvas = tk.Canvas(self, width=largura, height=altura)
@@ -64,7 +88,8 @@ class FrameVisorMachine(tk.Frame):
         
         ### Número/quantidade de figuras no slot
         self.numero_de_slots = numero_de_slots * repeticoes
-        self.cores = cores[:numero_de_slots] * repeticoes
+        self.cores = cores[:numero_de_slots]
+        self.figuras = figuras
 
         ### Variáveis de animação
 
@@ -108,14 +133,18 @@ class FrameVisorMachine(tk.Frame):
         ]
 
         self.slots = [
-            (lambda pos:
+            (lambda pos, i:
                 # retorna um retângulo
                 self.canvas.create_rectangle(pos[0],                                # x0
                                              pos[1],                                # y0
                                              pos[0] + self.slots_config['largura'], # x1
                                              pos[1] + self.slots_config['altura'],  # y1
-                                             fill=self.cores[(cor_inicial + i) % self.numero_de_slots])  # cor
-            )(self.coords_slots[i]) # passa as coordenadas do slot
+                                             fill=self.cores[(cor_inicial + i) % numero_de_slots],      # cor
+                                             tags=(self.figuras[(cor_inicial + i) % numero_de_slots],   # simbolo
+                                                   f'slot_{i}'
+                                                   )
+                                             )
+            )(self.coords_slots[i], i) # passa as coordenadas do slot
             for i in range(self.numero_de_slots)
         ]
 
@@ -159,14 +188,17 @@ class FrameVisorMachine(tk.Frame):
             if self.velocidade_y_atual < 3 and self.fator_desaceleracao > 0.4:
                 self.fator_desaceleracao /= 2
 
+            # Slot parou de rodar
             if self.velocidade_y_atual < 0:
                 self.velocidade_y_atual = 0
                 self.animando = False
                 self.centralizar_slots()
-
-            self.after(10, self.animar)
+                self.controle.rotina_fim_de_jogo()
+            else:
+                self.after(20, self.animar)
         else:
-            print('nao animando')
+            # print('nao animando')
+            pass
     
     def centralizar_slots(self):
         slot_mais_perto = -1
@@ -187,18 +219,18 @@ class FrameVisorMachine(tk.Frame):
         for i, slot in enumerate(self.slots):
             self.coords_slots[i][self.Y] += deslocamento
             self.canvas.move(slot, 0, deslocamento)
-        
-    #     self.corrigir_slots_fora_dos_limites()
     
-    # def corrigir_slots_fora_dos_limites(self):
-    #     print("corrigindo slots")
-    #     for i, slot in enumerate(self.slots):
-    #         intervalo = self.y_maximo - self.y_minimo
-    #         y = int(self.coords_slots[i][self.Y])
-    #         novo_y = self.y_minimo + (y - self.y_minimo) % intervalo
-    #         self.coords_slots[i][self.Y] = novo_y
-    #         deslocamento = (novo_y - y)
-    #         self.canvas.move(slot, 0, deslocamento)
+    def get_id_slot_central(self):
+        x = self.canvas.winfo_width() / 2
+        y = self.canvas.winfo_height() / 2
+        slot_central = self.canvas.find_closest(x, y)
+        return slot_central
+    
+    def get_figura_slot_central(self):
+        item = self.get_id_slot_central()
+        tags = self.canvas.gettags(item)
+
+        return tags
 
 if __name__ == '__main__':
     gui = tk.Tk()
